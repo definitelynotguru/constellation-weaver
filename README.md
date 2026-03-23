@@ -23,6 +23,8 @@ Every connection glows with neon trails and flowing particles. Complete a shape 
 
 Zero pressure. No timer. No failure. Just you, the void, and endless constellations to discover.
 
+[Test it here.](https://definitelynotguru.github.io/constellation-weaver/)
+
 ---
 
 ## Features
