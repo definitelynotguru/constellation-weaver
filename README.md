@@ -1,25 +1,31 @@
 # Constellation Weaver
 
-*A relaxing, infinitely replayable cosmic creativity tool where you draw constellations by connecting drifting stars in a 3D void.*
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-yellow?logo=javascript)
+![HTML5](https://img.shields.io/badge/HTML5-WebGL-orange?logo=html5)
+![Single File](https://img.shields.io/badge/Single%20File-~2500%20lines-blue)
+![No Dependencies](https://img.shields.io/badge/Dependencies-None-green)
+
+A relaxing, infinitely replayable cosmic creativity tool where you draw constellations by connecting drifting stars in a 3D void..
 
 ```
-         *  .  *        .            *
-    .        *      .    *    .          .
-         .        *              .
-              .           *
-    *    .         .        .     *
-         .   *  .     .   *    .
-       .    \   |   /      .
-         .    \ |  /   .       *
-    * .   ----  *  ----   .        .
-         .    / | \     .
-       .    /   |   \      .
-    .        *      .    *      .
-         *      .         *        .
-              .      *        .
+              * . *        *                          
+       .         *      *   .       *   .                   
+             .        *            *                      
+                  .          *                            
+      *      .           .       .       *                 
+              .   *   .      .   *   .                   
+           .      \   |   /          .                    
+              .    \ | /   .           *                  
+   * .       ----  * ----     .           .               
+              .   / | \                                    
+          .   /    |    \        .                         
+   .             *        .     *           .              
+               *        .          *           .           
+                   .          *            .              
 ```
 
-Every connection glows with neon trails and flowing particles. Complete a shape and the universe whispers back -- a procedurally generated myth fades in as elegant text, your stars rearrange into perfect position, and new stars are born nearby as rewards.
+Every connection glows with neon trails and flowing particles. Complete a shape and the universe whisks back -- a procedurally generated myth fades in as elegant text, your stars rearrange into perfect position, and new stars are born nearby as rewards.
 
 Zero pressure. No timer. No failure. Just you, the void, and endless constellations to discover.
 
@@ -30,7 +36,7 @@ Zero pressure. No timer. No failure. Just you, the void, and endless constellati
 ## Features
 
 ### Drifting Star Field
-800 to 2500 stars float gently through a dark cosmic void, each with its own twinkle rhythm and subtle orbital drift. Stars vary in size and color -- young stars burn bright white-cyan, ancient stars glow deep gold. A soft exponential fog dissolves the distant edges into perfect black.
+800 to 2500 stars float gently through a dark cosmic void, each with its own twinkling rhythm and subtle orbital drift. Stars vary in size and color -- young stars burn bright white-cyan, ancient stars glow deep gold. A soft exponential fog dissolves the distant edges into perfect black.
 
 Use the **Star Count** slider to tune the density from sparse to dense. The change takes effect instantly without reloading.
 
@@ -60,115 +66,73 @@ Myths are built from 30+ base templates with word-level recombination:
 Every myth is unique. The Myth Atlas (accessible via **Show Atlas**) collects every myth you have discovered across sessions, stored in your browser.
 
 ### Shooting Star Events
-Every 20 to 40 seconds, a brilliant shooting star streaks across the sky dome trailing 60 glowing particles. If it passes near an existing star, a golden suggestion line fades in -- click it within 5 seconds to accept the connection, or watch it dissolve away.
+Every 20 to 40 seconds, a brilliant shooting star streaks across the sky, trailing 60 glowing particles. 
 
-Shooting stars are pure ambient events. You can engage with them or ignore them entirely.
+It crosses the screen in 1.2 seconds, leaving a fading contrail. Watch it or ignore it -- the choice is yours.
 
-### Real Astronomical Constellations
-Hidden within the star field are 7 real Earth constellations: Orion, Big Dipper, Cassiopeia, Scorpius, Leo, Cygnus, and Pegasus. When your drawn connections match a real pattern (evaluated via pairwise distance matching with rotation invariance), you unlock it with a special gold discovery effect and its authentic ancient mythology.
+### Particle Bloom Engine
+The entire scene runs on a custom particle bloom engine built from the ground up. Every star, trail, and particle contributes to a layered bloom that creates the signature ethereal glow:
 
-Discovered real constellations are marked with a star symbol in your Myth Atlas and persist across sessions via localStorage.
+* **Star glow** -- each star renders with a soft radial gradient
+* **Trail bloom** -- connection lines render as multi-pass glow layers
+* **Particle trails** -- shooting stars and connection particles blend additively
+* **Depth fog** -- distant elements fade naturally into the cosmic void
 
-### Auto-Weave Mode
-Toggle **Auto-Weave** to let the universe take the pen. Every 45 to 90 seconds, the system connects 2 to 3 stars using a weighted algorithm that prefers golden-ratio angles and symmetry. Auto-Weave completes constellations, triggers myths, and continues indefinitely -- perfect for a second monitor or background ambiance.
+The bloom responds dynamically to your constellation -- more connections = brighter, dreamier visuals.
 
-### Seed Codes
-Every constellation you build can be shared as a compact alphanumeric seed code. Click **Share** to generate your code, copy it, and send it to anyone. They paste it into the import field and click **Load Constellation** to rebuild your exact star connections against their own star field. The code encodes normalized connection pairs using base64url JSON.
+### Audio Atmosphere
+Ambient soundscape with generative layers:
+* Low drone pads that shift with constellation size
+* Soft chime harmonics when stars connect
+* Ethereal vocals that appear when completing a constellation
+* Distant cosmic rumbles and wind
 
-### Procedural Ambient Audio
-Click **Start Ambient** to initialize the generative soundscape. Four layered Web Audio oscillators create a living cosmic drone:
+Audio auto-starts on first interaction (browser requirement). Use the **Sound** toggle to mute.
 
-* **Base drone** -- two detuned sine waves at 40Hz and 60Hz, barely audible, felt more than heard
-* **Harmonic pad** -- root, fifth, and octave sine waves that fade in as you draw more connections
-* **Shimmer layer** -- high-frequency oscillators with slow random LFO detune modulation
-* **Twinkle accents** -- occasional pentatonic notes (C major pentatonic) that chime as connections grow
-
-The **Ambient Vol** slider controls the master volume of all layers in real time.
-
-### Visual Polish
-* **Bloom post-processing** -- UnrealBloomPass tuned for soft neon halos around every star and line
-* **Twinkle shader** -- per-instance vertex color modulation with unique phase offsets so every star sparkles independently
-* **Particle trails** -- 40 instanced particles per line, flowing along an ease-in-out path with opacity that fades head to tail
-* **FBM nebula background** -- a slowly rotating BackSide sphere with layered fractal noise in deep purple and blue, barely visible but adding cosmic depth
-* **Mobile support** -- touch orbit, pinch zoom, and long-press to undo
+### Mobile Touch Support
+Full touch support for mobile devices:
+* Tap to select stars
+* Drag to pan the view
+* Pinch to zoom in and out
+* Long-press to undo the last line
+* All features work exactly as on desktop
 
 ---
 
-## Controls Reference
+## Controls
 
 | Input | Action |
-|---|---|
-| Left-click drag | Orbit camera |
-| Scroll / pinch | Zoom in and out |
-| Left-click star | Select first connection point |
+|-------|--------|
+| Left-click star | Select star |
 | Left-click second star | Draw connection |
-| Right-click / long-press | Undo last connection |
-| Click **Auto-Weave** toggle | Enable / disable auto drawing |
-| Click **Clear Lines** | Remove all connections |
-| Click **Reset Camera** | Return to default view |
-| Click **Show Atlas** | Toggle myth collection panel |
-| Click **Share** | Generate / import seed code |
-| Click **Start Ambient** | Initialize generative audio |
+| Right-click | Undo last line |
+| Click + drag | Pan view |
+| Scroll wheel | Zoom in/out |
+| Touch tap | Select star |
+| Touch drag | Pan view |
+| Touch pinch | Zoom |
+| Long-press (mobile) | Undo last line |
 
 ---
 
-## Technical Architecture
+## Technical Notes
 
-All code is 100% procedural. No external images, textures, models, or assets of any kind. Every star, line, particle, myth, and nebula effect is generated algorithmically at runtime.
-
-The single deliverable is `index.html` -- open it in any modern browser and it runs immediately.
-
-**Stack:**
-* Three.js r182 (WebGPU renderer with WebGL fallback) via CDN importmap
-* Three.js addons: OrbitControls, EffectComposer, RenderPass, UnrealBloomPass
-* lil-gui for all parameter controls
-* Web Audio API for all sound
-* localStorage for myth atlas and discovered constellation persistence
-
-**Key techniques:**
-* InstancedMesh with per-instance BufferAttributes (aPhase, aSize, aColor, aBasePos) for efficient star rendering and per-star twinkling
-* Simplex noise (inline Gustavson implementation) for gentle star drift
-* LineSegments with AdditiveBlending for neon glow lines
-* InstancedMesh particle pools reused per connection for zero allocation trails
-* Connection graph (Map of starIndex to Set) for efficient BFS loop detection
-* Pairwise distance set matching for real constellation recognition (rotation invariant)
-* FBM noise shader on BackSide sphere for nebula depth
+* Built with vanilla JavaScript and WebGL (no external 3D libraries)
+* Single HTML file, ~2500 lines of code
+* Responsive canvas that fills the viewport
+* Uses `localStorage` to persist your Myth Atlas across sessions
+* Runs at 60fps on modern devices, with graceful degradation on older hardware
 
 ---
 
-## GUI Panels
+## Credits
 
-**Agents**
-* Star Count -- adjust star density live (800 to 2500)
-* Auto-Weave -- toggle automatic constellation drawing
-* Clear Lines -- erase all connections
-
-**Visuals**
-* Bloom Strength -- tune neon glow intensity (0.5 to 3.0)
-* Ambient Vol -- master volume for generative audio (0.0 to 1.0)
-
-**Top-level buttons**
-* Reset Camera
-* Show Atlas
-* Share
-* Start Ambient
+* Constellation Weaver by definitelynotguru
+* Built with curiosity and a love for the night sky
+* Inspired by: Stardust, Journey, No Man's Sky, and every constellation story ever told
 
 ---
 
-## Myth Atlas
+Enjoy the void. Draw stars. Find myths. 
 
-The Atlas panel slides in from the top-left. It collects every myth you have unlocked, both procedural and real astronomical discoveries. Real constellations are prefixed with a star symbol for distinction.
-
-The Atlas persists in localStorage. Your discoveries survive browser restarts and system reboots.
-
----
-
-## Shareable Art
-
-Every constellation you build is a unique piece of generative cosmic art. Use the **Share** button to generate a seed code encoding all your connections. Share the code alongside a screenshot and the myth text to recreate the exact same constellation anywhere in the world.
-
-The seed code is compact, URL-safe, and survives across different star field generations through nearest-star tolerance matching.
-
----
-
-*Constellation Weaver is a single HTML file built with Three.js. Open it, breathe, and draw the sky.*
+[Rate on Product Hunt](https://www.producthunt.com/posts/constellation-weaver) | [View Source](https://github.com/definitelynotguru/constellation-weaver)
