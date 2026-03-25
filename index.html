@@ -23,6 +23,10 @@
       opacity: 0;
       transition: opacity 2s ease-in-out;
     }
+    @keyframes mythTitleIn {
+      0% { opacity: 0; transform: scale(0.85); }
+      100% { opacity: 1; transform: scale(1); }
+    }
     #myth-title {
       font-family: 'Orbitron', sans-serif;
       font-size: 1.8em;
@@ -30,6 +34,7 @@
       text-shadow: 0 0 30px rgba(255,255,255,0.8), 0 0 60px rgba(136,255,255,0.5);
       margin-bottom: 0.5em;
       letter-spacing: 0.15em;
+      animation: mythTitleIn 0.6s ease-out forwards;
     }
     #myth-body {
       font-family: 'Rajdhani', sans-serif;
@@ -73,6 +78,10 @@
       padding: 5px 0;
       border-bottom: 1px solid rgba(136,255,255,0.08);
       line-height: 1.4;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 280px;
     }
     .atlas-entry:last-child { border-bottom: none; }
     #legendary-input {
@@ -110,21 +119,124 @@
       letter-spacing: 0.1em;
       text-shadow: 0 0 10px rgba(255,204,68,0.5);
     }
+    @keyframes weavePulse { 0%,100%{opacity:0.6} 50%{opacity:1} }
+    @keyframes starLabelFade { 0%{opacity:0} 20%{opacity:1} 80%{opacity:1} 100%{opacity:0} }
+    @keyframes fadeHint { 0%{opacity:0} 15%{opacity:1} 70%{opacity:1} 100%{opacity:0} }
   </style>
 </head>
 <body>
   <div id="gui-container"></div>
+  <div id="star-label" style="
+    position: fixed;
+    pointer-events: none;
+    z-index: 150;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.75em;
+    color: rgba(136,255,255,0.75);
+    text-shadow: 0 0 8px rgba(136,255,255,0.5);
+    letter-spacing: 0.1em;
+    display: none;
+  "></div>
   <div id="myth-overlay">
     <div id="myth-title"></div>
     <div id="myth-body"></div>
   </div>
   <div id="atlas-panel">
-    <div id="atlas-header">CONSTELLATION ATLAS</div>
+    <div id="atlas-header">CONSTELLATION ATLAS <span id="atlas-discovery-count" style="color:rgba(255,204,68,0.7);font-size:0.75em;"></span></div>
     <div id="atlas-list"></div>
     <div id="legendary-unlock" style="display:none">LEGENDARY MODE UNLOCKED</div>
     <input id="legendary-input" type="text" placeholder="Name your constellation..." style="display:none" />
     <button id="legendary-submit" style="display:none">NAME &amp; SEAL</button>
   </div>
+
+  <!-- Connection HUD -->
+  <div id="connection-hud" style="
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.72em;
+    color: rgba(136,255,255,0.65);
+    letter-spacing: 0.15em;
+    text-shadow: 0 0 12px rgba(136,255,255,0.4);
+    pointer-events: none;
+    z-index: 100;
+    text-align: center;
+  "></div>
+
+  <!-- Keyboard Shortcuts Overlay -->
+  <div id="shortcuts-overlay" style="
+    position: fixed;
+    bottom: 60px;
+    right: 20px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.8em;
+    color: rgba(136,255,255,0.75);
+    background: rgba(0,0,0,0.7);
+    border: 1px solid rgba(136,255,255,0.2);
+    border-radius: 6px;
+    padding: 12px 16px;
+    z-index: 200;
+    display: none;
+    line-height: 1.8;
+  ">
+    <div style="font-family:'Orbitron',sans-serif;font-size:0.9em;margin-bottom:6px;color:rgba(136,255,255,0.9)">KEYBOARD SHORTCUTS</div>
+    <div><span style="color:rgba(255,255,255,0.6)">Esc / U</span> Deselect star</div>
+    <div><span style="color:rgba(255,255,255,0.6)">Del / Backspace</span> Undo last line</div>
+    <div><span style="color:rgba(255,255,255,0.6)">C</span> Clear all lines</div>
+    <div><span style="color:rgba(255,255,255,0.6)">R</span> Reset camera</div>
+    <div><span style="color:rgba(255,255,255,0.6)">A</span> Toggle auto-weave</div>
+    <div><span style="color:rgba(255,255,255,0.6)">?</span> Toggle this help</div>
+  </div>
+
+  <!-- Save Notification -->
+  <div id="save-notification" style="
+    position: fixed;
+    bottom: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.8em;
+    color: rgba(255,136,136,0.9);
+    text-shadow: 0 0 8px rgba(255,100,100,0.5);
+    pointer-events: none;
+    z-index: 200;
+    display: none;
+  ">Unable to save — localStorage full</div>
+
+  <!-- First-hint -->
+  <div id="first-hint" style="
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.9em;
+    color: rgba(136,255,255,0.6);
+    text-shadow: 0 0 12px rgba(136,255,255,0.4);
+    pointer-events: none;
+    z-index: 100;
+    letter-spacing: 0.12em;
+    animation: fadeHint 8s ease-in-out forwards;
+  ">Click two stars to draw a constellation</div>
+
+  <!-- Auto-Weave Indicator -->
+  <div id="weave-indicator" style="
+    position: fixed;
+    top: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.65em;
+    color: rgba(136,255,255,0.8);
+    letter-spacing: 0.18em;
+    text-shadow: 0 0 10px rgba(136,255,255,0.6);
+    pointer-events: none;
+    z-index: 100;
+    display: none;
+    animation: weavePulse 2s ease-in-out infinite;
+  ">AUTO-WEAVE ACTIVE</div>
 
   <!-- Share Modal -->
   <div id="share-modal" style="
@@ -196,7 +308,24 @@
     const MYTH_DISPLAY_TIME = 12000; // ms
     const ATLAS_KEY = 'constellation_weaver_atlas';
 
-    // ─── Shooting Star Constants. ─────────────────────────────────
+    // ─── Safe localStorage save with user notification ─────────────
+    let saveNotifTimer = null;
+    function safeSave(key, value) {
+      try {
+        localStorage.setItem(key, JSON.stringify(value));
+        return true;
+      } catch(e) {
+        const notif = document.getElementById('save-notification');
+        if (notif) {
+          notif.style.display = 'block';
+          if (saveNotifTimer) clearTimeout(saveNotifTimer);
+          saveNotifTimer = setTimeout(() => { notif.style.display = 'none'; }, 4000);
+        }
+        return false;
+      }
+    }
+
+    // ─── Shooting Star Constants ─────────────────────────────────
     const SHOOTING_STAR_INTERVAL_MIN = 20000; // ms
     const SHOOTING_STAR_INTERVAL_MAX = 40000;  // ms
     const SHOOTING_STAR_DURATION     = 3.5;    // seconds (approximate via speed)
@@ -422,6 +551,16 @@
     );
     composer.addPass(bloomPass);
 
+    // Bloom flash state — single object, updated in animate() instead of orphaned rAF chains
+    const bloomFlashState = { baseBloom: 1.6, flashStrength: 1.6, t: 1 };
+
+    // Camera ease-to-default state
+    let easeCameraToDefault = false;
+    let cameraResetStartTime = 0;
+    const CAMERA_RESET_DURATION = 1200; // ms
+    const defaultCameraPos = new THREE.Vector3(0, 0, 400);
+    const defaultTarget = new THREE.Vector3(0, 0, 0);
+
     // ═══════════════════════════════════════════════════════════════
     // SECTION 4: Stars (Geometry, Material, InstancedMesh)
     // ═══════════════════════════════════════════════════════════════
@@ -491,7 +630,18 @@
       return c;
     }
 
+    function clearPendingSuggestions() {
+      for (const ps of pendingSuggestions) {
+        scene.remove(ps.lineSegments);
+        ps.lineSegments.geometry.dispose();
+        ps.lineSegments.material.dispose();
+      }
+      pendingSuggestions.length = 0;
+    }
+
     function initializeStars(count) {
+      clearPendingSuggestions();
+      nextShootingStarTime = performance.now() + SHOOTING_STAR_INTERVAL_MIN + Math.random() * (SHOOTING_STAR_INTERVAL_MAX - SHOOTING_STAR_INTERVAL_MIN);
       for (let i = 0; i < count; i++) {
         const r = SPHERE_RADIUS_MIN + Math.random() * (SPHERE_RADIUS_MAX - SPHERE_RADIUS_MIN);
         const theta = Math.random() * Math.PI * 2;
@@ -538,6 +688,20 @@
     const pendingSuggestions = []; // { lineSegments, starA, createdAt }
     let nextShootingStarTime = 0;
 
+    // Pre-allocated scratch objects for updateShootingStars (avoid per-frame GC pressure)
+    const ssDummy = new THREE.Object3D();
+    const ssMat = new THREE.Matrix4();
+    const ssStarPos = new THREE.Vector3();
+    const ssPos = new THREE.Vector3();
+
+    // Pre-allocated scratch for particle trails (avoid per-frame allocation)
+    const particleDummy = new THREE.Object3D();
+
+    // Pre-allocated scratch for findNearestStar (avoid per-call allocation)
+    const findRefPos = new THREE.Vector3();
+    const findMat = new THREE.Matrix4();
+    const findStarPos = new THREE.Vector3();
+
     function spawnShootingStar() {
       const r = SPHERE_RADIUS_MIN + Math.random() * (SPHERE_RADIUS_MAX - SPHERE_RADIUS_MIN);
       const theta1 = Math.random() * Math.PI * 2;
@@ -570,10 +734,10 @@
         headPos: startPos.clone(), direction: null, progress: 0,
         trailMesh, offsets, startPos, endPos, suggested: false
       });
+      playShootingStarChime();
     }
 
     function updateShootingStars(delta) {
-      const dummy = new THREE.Object3D();
       const now = performance.now();
 
       if (now > nextShootingStarTime) {
@@ -600,12 +764,11 @@
         // Check proximity to existing stars → create suggestion
         if (!ss.suggested) {
           for (let j = 0; j < starMesh.count; j++) {
-            const mat = new THREE.Matrix4();
-            starMesh.getMatrixAt(j, mat);
-            const starPos = new THREE.Vector3().setFromMatrixPosition(mat);
-            if (starPos.distanceTo(ss.headPos) < SHOOTING_STAR_PROXIMITY) {
+            starMesh.getMatrixAt(j, ssMat);
+            ssStarPos.setFromMatrixPosition(ssMat);
+            if (ssStarPos.distanceTo(ss.headPos) < SHOOTING_STAR_PROXIMITY) {
               const linePos = new Float32Array([
-                starPos.x, starPos.y, starPos.z,
+                ssStarPos.x, ssStarPos.y, ssStarPos.z,
                 ss.headPos.x, ss.headPos.y, ss.headPos.z
               ]);
               const lineGeo = new THREE.BufferGeometry();
@@ -615,7 +778,7 @@
               });
               const seg = new THREE.LineSegments(lineGeo, lineMat);
               scene.add(seg);
-              pendingSuggestions.push({ lineSegments: seg, starA: j, endPos: ss.headPos.clone(), createdAt: now });
+              pendingSuggestions.push({ lineSegments: seg, starA: j, endPos: ss.headPos.clone(), createdAt: now, spawnFlash: 1.0 });
               ss.suggested = true;
               break;
             }
@@ -625,12 +788,11 @@
         // Update trail particles
         for (let p = 0; p < SHOOTING_STAR_TRAIL_PARTICLES; p++) {
           const t = Math.max(0, ss.progress - ss.offsets[p]);
-          const pos = new THREE.Vector3().lerpVectors(ss.startPos, ss.endPos, t);
-          const opacity = 1.0 - (p / SHOOTING_STAR_TRAIL_PARTICLES);
-          dummy.position.copy(pos);
-          dummy.scale.setScalar(0.3 + opacity * 0.7);
-          dummy.updateMatrix();
-          ss.trailMesh.setMatrixAt(p, dummy.matrix);
+          const opacity = (p + 1) / SHOOTING_STAR_TRAIL_PARTICLES;
+          ssDummy.position.lerpVectors(ss.startPos, ss.endPos, t);
+          ssDummy.scale.setScalar(0.3 + opacity * 0.7);
+          ssDummy.updateMatrix();
+          ss.trailMesh.setMatrixAt(p, ssDummy.matrix);
         }
         ss.trailMesh.instanceMatrix.needsUpdate = true;
       }
@@ -645,7 +807,13 @@
           ps.lineSegments.material.dispose();
           pendingSuggestions.splice(i, 1);
         } else {
-          ps.lineSegments.material.opacity = 0.7 * (1 - age / SHOOTING_STAR_SUGGESTION_LIFETIME);
+          // Apply spawn flash decay + age-based fade
+          if (ps.spawnFlash > 0) {
+            ps.spawnFlash = Math.max(0, ps.spawnFlash - 0.05);
+            ps.lineSegments.material.opacity = Math.min(1.0, 0.7 * (1 - age / SHOOTING_STAR_SUGGESTION_LIFETIME) + ps.spawnFlash);
+          } else {
+            ps.lineSegments.material.opacity = 0.7 * (1 - age / SHOOTING_STAR_SUGGESTION_LIFETIME);
+          }
         }
       }
     }
@@ -655,7 +823,7 @@
     // ═══════════════════════════════════════════════════════════════
     const highlightGeometry = new THREE.IcosahedronGeometry(3.5, 2);
     const highlightMaterial = new THREE.MeshBasicMaterial({
-      color: 0xffffff, transparent: true, opacity: 0.25, wireframe: true
+      color: 0x88ffff, transparent: true, opacity: 0.35, wireframe: true, blending: THREE.AdditiveBlending, depthWrite: false
     });
     const highlightMesh = new THREE.Mesh(highlightGeometry, highlightMaterial);
     highlightMesh.visible = false;
@@ -692,7 +860,6 @@
 
     function updateParticleTrails(delta) {
       if (connections.length > 20) return;
-      const particleDummy = new THREE.Object3D();
       for (const conn of connections) {
         const mesh = conn.particles;
         const ud = mesh.userData;
@@ -818,6 +985,16 @@
       addToGraph(starA, starB);
 
       playConnectChime(distance);
+
+      // Hide first-hint on first connection
+      const hint = document.getElementById('first-hint');
+      if (hint) { hint.style.display = 'none'; }
+
+      // Brief bloom flash on connection — single state object, no orphaned rAF chains
+      bloomFlashState.baseBloom = bloomPass.strength;
+      bloomFlashState.flashStrength = bloomFlashState.baseBloom + 0.8;
+      bloomFlashState.t = 0;
+
       console.log(`Line drawn: ${connections.length} total`);
 
       // Check for completion
@@ -845,6 +1022,25 @@
     function clearAllConnections() {
       while (connections.length > 0) removeLastConnection();
       clearGraph();
+      clearPendingSuggestions();
+      scheduleNextAutoWeave();
+      updateConnectionHUD();
+    }
+
+    // ─── Connection HUD ─────────────────────────────────────────────
+    function updateConnectionHUD() {
+      const hud = document.getElementById('connection-hud');
+      if (!hud) return;
+      const count = connections.length;
+      const threshold = COMPLETION_LINE_COUNT;
+      if (count === 0) {
+        hud.textContent = '';
+      } else if (count >= MAX_CONNECTIONS) {
+        hud.textContent = `LINES ${count} \u2014 MAX`;
+      } else {
+        const bar = '\u25CF'.repeat(Math.min(count, 10));
+        hud.textContent = `LINES ${count}/${threshold} ${bar}`;
+      }
     }
 
     // ─── Star Selection Helpers ────────────────────────────────────
@@ -971,13 +1167,17 @@
     }
 
     function saveDiscoveredConstellations() {
-      try { localStorage.setItem(DISCOVERED_CONSTELLATIONS_KEY, JSON.stringify(discoveredConstellations)); } catch(e) {}
+      safeSave(DISCOVERED_CONSTELLATIONS_KEY, discoveredConstellations);
     }
 
     function loadDiscoveredConstellations() {
       try {
         const saved = localStorage.getItem(DISCOVERED_CONSTELLATIONS_KEY);
-        if (saved) discoveredConstellations.push(...JSON.parse(saved));
+        if (saved) {
+          const loaded = JSON.parse(saved);
+          discoveredConstellations = [...new Set([...discoveredConstellations, ...loaded])];
+          updateAtlasDiscoveryCount();
+        }
       } catch(e) {}
     }
 
@@ -1025,7 +1225,7 @@
       const tmpl = mythTemplates[Math.floor(Math.random() * mythTemplates.length)];
       let myth = tmpl;
       for (const [key, words] of Object.entries(wordBanks)) {
-        myth = myth.replace(key, words[Math.floor(Math.random() * words.length)]);
+        myth = myth.replace(new RegExp(key, 'g'), words[Math.floor(Math.random() * words.length)]);
       }
       return myth;
     }
@@ -1038,6 +1238,9 @@
       const overlay = document.getElementById('myth-overlay');
       const title = document.getElementById('myth-title');
       const body = document.getElementById('myth-body');
+      title.style.animation = 'none';
+      title.offsetHeight; // force reflow
+      title.style.animation = '';
       title.textContent = myth;
       body.textContent = '';
       overlay.style.opacity = '1';
@@ -1051,7 +1254,7 @@
 
     function addMythToAtlas(myth) {
       discoveredMyths.push(myth);
-      try { localStorage.setItem(ATLAS_KEY, JSON.stringify(discoveredMyths)); } catch(e) {}
+      safeSave(ATLAS_KEY, discoveredMyths);
       renderAtlas();
       checkLegendaryMode();
     }
@@ -1060,7 +1263,8 @@
       try {
         const saved = localStorage.getItem(ATLAS_KEY);
         if (saved) {
-          discoveredMyths.push(...JSON.parse(saved));
+          const loaded = JSON.parse(saved);
+          discoveredMyths.splice(0, discoveredMyths.length, ...[...new Set(loaded)]);
           renderAtlas();
           checkLegendaryMode();
         }
@@ -1070,9 +1274,20 @@
     function renderAtlas() {
       const list = document.getElementById('atlas-list');
       if (!list) return;
+      const ents = {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'};
+      const esc = s => String(s).replace(/[&<>"']/g, c => ents[c] || c);
       list.innerHTML = discoveredMyths.map(m =>
-        `<div class="atlas-entry">${m}</div>`
+        `<div class="atlas-entry">${esc(m)}</div>`
       ).join('');
+      updateAtlasDiscoveryCount();
+    }
+
+    function updateAtlasDiscoveryCount() {
+      const el = document.getElementById('atlas-discovery-count');
+      if (!el) return;
+      const count = discoveredConstellations.length;
+      const total = REAL_CONSTELLATIONS.length;
+      el.textContent = count > 0 ? `${count}/${total}` : '';
     }
 
     function checkLegendaryMode() {
@@ -1117,14 +1332,46 @@
       addMythToAtlas(myth);
       playCompletionChime();
       playMythRevealPad();
-      if (score && score.centroid) orbitToConstellation(score.centroid);
+      if (score && score.centroid) {
+        orbitToConstellation(score.centroid);
+        spawnMythLabel(myth, score.centroid);
+      }
       const rewardCount = 4 + Math.floor(Math.random() * 5);
       spawnRewardStars(score?.centroid, rewardCount);
     }
 
+    function spawnMythLabel(text, centroid) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 512; canvas.height = 64;
+      const ctx = canvas.getContext('2d');
+      ctx.font = 'bold 28px Orbitron, sans-serif';
+      ctx.fillStyle = 'rgba(255,255,255,0.9)';
+      ctx.textAlign = 'center';
+      ctx.shadowColor = 'rgba(136,255,255,0.8)';
+      ctx.shadowBlur = 20;
+      ctx.fillText(text.substring(0, 30), 256, 40);
+      const tex = new THREE.CanvasTexture(canvas);
+      const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false });
+      const sprite = new THREE.Sprite(mat);
+      sprite.position.set(centroid.x, centroid.y + 25, centroid.z);
+      sprite.scale.set(120, 15, 1);
+      scene.add(sprite);
+      let age = 0;
+      const fadeLabel = () => {
+        age += 0.016;
+        sprite.material.opacity = Math.max(0, 1 - age / 5);
+        sprite.position.y += 0.3;
+        if (age < 5) requestAnimationFrame(fadeLabel);
+        else { scene.remove(sprite); sprite.material.map.dispose(); sprite.material.dispose(); }
+      };
+      requestAnimationFrame(fadeLabel);
+    }
+
     // ─── Star Rewards ─────────────────────────────────────────────
     function spawnRewardStars(centroid, count) {
+      if (starMesh.count >= MAX_STARS) return;
       for (let i = 0; i < count; i++) {
+        if (starMesh.count >= MAX_STARS) break;
         const refIdx = Math.floor(Math.random() * starMesh.count);
         const angle = Math.random() * Math.PI * 2;
         const dist = 15 + Math.random() * 25;
@@ -1163,7 +1410,14 @@
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         masterGain = audioCtx.createGain();
         masterGain.gain.value = 0.4;
-        masterGain.connect(audioCtx.destination);
+        const compressor = audioCtx.createDynamicsCompressor();
+        compressor.threshold.value = -6;
+        compressor.knee.value = 3;
+        compressor.ratio.value = 12;
+        compressor.attack.value = 0.003;
+        compressor.release.value = 0.25;
+        masterGain.connect(compressor);
+        compressor.connect(audioCtx.destination);
       } catch(e) { console.warn('Web Audio not available'); }
     }
 
@@ -1175,59 +1429,100 @@
 
     function playConnectChime(distance) {
       if (!audioCtx) return;
-      try {
-        const freq = 220 + (1 - distance / 1600) * 660;
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(freq * 1.5, audioCtx.currentTime + 0.1);
-        gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.8);
-        osc.connect(gain); gain.connect(masterGain);
-        osc.start(); osc.stop(audioCtx.currentTime + 0.8);
-      } catch(e) {}
+      const doPlay = t => {
+        try {
+          const freq = 220 + (1 - distance / 1600) * 660;
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, t);
+          osc.frequency.exponentialRampToValueAtTime(freq * 1.5, t + 0.1);
+          gain.gain.setValueAtTime(0.12, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.8);
+          osc.connect(gain); gain.connect(masterGain);
+          osc.start(); osc.stop(t + 0.8);
+        } catch(e) {}
+      };
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume().then(() => doPlay(audioCtx.currentTime));
+      } else {
+        doPlay(audioCtx.currentTime);
+      }
+    }
+
+    function playShootingStarChime() {
+      if (!audioCtx) return;
+      const doPlay = t => {
+        try {
+          const freq = 880 + Math.random() * 440;
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, t);
+          gain.gain.setValueAtTime(0.06, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+          osc.connect(gain); gain.connect(masterGain);
+          osc.start(); osc.stop(t + 0.5);
+        } catch(e) {}
+      };
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume().then(() => doPlay(audioCtx.currentTime));
+      } else { doPlay(audioCtx.currentTime); }
     }
 
     function playCompletionChime() {
       if (!audioCtx) return;
-      try {
-        const gainNode = audioCtx.createGain();
-        gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 2.5);
-        const notes = [261.6, 329.6, 392.0, 523.2];
-        notes.forEach((freq, i) => {
-          const osc = audioCtx.createOscillator();
-          osc.type = 'triangle';
-          osc.frequency.value = freq;
-          const ng = audioCtx.createGain();
-          ng.gain.setValueAtTime(0, audioCtx.currentTime + i*0.15);
-          ng.gain.linearRampToValueAtTime(0.08, audioCtx.currentTime + i*0.15 + 0.05);
-          ng.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + i*0.15 + 1.2);
-          osc.connect(ng); ng.connect(gainNode);
-          osc.start(audioCtx.currentTime + i*0.15);
-          osc.stop(audioCtx.currentTime + i*0.15 + 1.2);
-        });
-        gainNode.connect(masterGain);
-      } catch(e) {}
+      const doPlay = t => {
+        try {
+          const gainNode = audioCtx.createGain();
+          gainNode.gain.setValueAtTime(0.1, t);
+          gainNode.gain.exponentialRampToValueAtTime(0.001, t + 2.5);
+          const notes = [261.6, 329.6, 392.0, 523.2];
+          notes.forEach((freq, i) => {
+            const osc = audioCtx.createOscillator();
+            osc.type = 'triangle';
+            osc.frequency.value = freq;
+            const ng = audioCtx.createGain();
+            ng.gain.setValueAtTime(0, t + i*0.15);
+            ng.gain.linearRampToValueAtTime(0.08, t + i*0.15 + 0.05);
+            ng.gain.exponentialRampToValueAtTime(0.001, t + i*0.15 + 1.2);
+            osc.connect(ng); ng.connect(gainNode);
+            osc.start(t + i*0.15);
+            osc.stop(t + i*0.15 + 1.2);
+          });
+          gainNode.connect(masterGain);
+        } catch(e) {}
+      };
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume().then(() => doPlay(audioCtx.currentTime));
+      } else {
+        doPlay(audioCtx.currentTime);
+      }
     }
 
     function playMythRevealPad() {
       if (!audioCtx) return;
-      try {
-        const freqs = [130.8, 164.8, 196.0];
-        const gn = audioCtx.createGain();
-        gn.gain.setValueAtTime(0, audioCtx.currentTime);
-        gn.gain.linearRampToValueAtTime(0.06, audioCtx.currentTime + 2);
-        gn.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 5);
-        freqs.forEach(freq => {
-          const osc = audioCtx.createOscillator();
-          osc.type = 'sine'; osc.frequency.value = freq;
-          osc.detune.value = Math.random() * 10 - 5;
-          osc.connect(gn); osc.start(); osc.stop(audioCtx.currentTime + 5);
-        });
-        gn.connect(masterGain);
-      } catch(e) {}
+      const doPlay = t => {
+        try {
+          const freqs = [130.8, 164.8, 196.0];
+          const gn = audioCtx.createGain();
+          gn.gain.setValueAtTime(0, t);
+          gn.gain.linearRampToValueAtTime(0.06, t + 2);
+          gn.gain.linearRampToValueAtTime(0, t + 5);
+          freqs.forEach(freq => {
+            const osc = audioCtx.createOscillator();
+            osc.type = 'sine'; osc.frequency.value = freq;
+            osc.detune.value = Math.random() * 10 - 5;
+            osc.connect(gn); osc.start(t); osc.stop(t + 5);
+          });
+          gn.connect(masterGain);
+        } catch(e) {}
+      };
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume().then(() => doPlay(audioCtx.currentTime));
+      } else {
+        doPlay(audioCtx.currentTime);
+      }
     }
 
     // ─── Procedural Ambient Audio ─────────────────────────────────
@@ -1332,6 +1627,7 @@
     `;
     const nebulaFragmentShader = `
       uniform float uTime;
+      uniform float uOpacity;
       varying vec3 vPosition;
 
       float hash(vec3 p) {
@@ -1357,13 +1653,13 @@
         vec3 p = normalize(vPosition) * 0.5 + uTime * 0.002;
         float n = pow(fbm(p * 2.0), 2.0);
         vec3 nebula = mix(vec3(0.05, 0.02, 0.08), vec3(0.02, 0.05, 0.12), n);
-        gl_FragColor = vec4(nebula * 0.6, 1.0);
+        gl_FragColor = vec4(nebula * 0.6, uOpacity);
       }
     `;
     const nebulaMat = new THREE.ShaderMaterial({
       vertexShader: nebulaVertexShader,
       fragmentShader: nebulaFragmentShader,
-      uniforms: { uTime: { value: 0 } },
+      uniforms: { uTime: { value: 0 }, uOpacity: { value: 0.6 } },
       side: THREE.BackSide,
       transparent: true,
       depthWrite: false
@@ -1405,8 +1701,7 @@
       );
       if (attempts < 50) {
         const prev = console.log; console.log = () => {};
-        addConnection(starA, starB);
-        console.log = prev;
+        try { addConnection(starA, starB); } finally { console.log = prev; }
       }
     }
 
@@ -1424,16 +1719,32 @@
     const agents = gui.addFolder('Agents');
     agents.add(starParams, 'starCount', 800, 2500, 1)
       .name('Star Count')
-      .onChange(v => initializeStars(Math.round(v)));
+      .onChange(v => {
+        if (connections.length > 0) {
+          const confirmed = confirm('Changing star count will clear all connections. Continue?');
+          if (!confirmed) {
+            starParams.starCount = starMesh.count;
+            return;
+          }
+          clearAllConnections();
+        }
+        initializeStars(Math.round(v));
+      });
     agents.add(weaveParams, 'autoWeave')
       .name('Auto-Weave')
-      .onChange(v => { controls.autoRotate = v; });
+      .onChange(v => {
+        controls.autoRotate = v;
+        const indicator = document.getElementById('weave-indicator');
+        indicator.style.display = v ? 'block' : 'none';
+      });
     agents.add({ clear: () => { clearAllConnections(); } }, 'clear').name('Clear Lines');
     agents.close();
 
     const visuals = gui.addFolder('Visuals');
     visuals.add({ bloomStrength: 1.6 }, 'bloomStrength', 0.5, 3.0, 0.1)
       .name('Bloom Strength').onChange(v => { bloomPass.strength = v; });
+    visuals.add({ nebulaOpacity: 0.6 }, 'nebulaOpacity', 0.0, 1.0, 0.05)
+      .name('Nebula').onChange(v => { nebulaMat.uniforms.uOpacity.value = Math.min(v, 1.0); });
     visuals.close();
 
     gui.add({ resetCamera: () => {
@@ -1478,12 +1789,11 @@
 
     function findNearestStar(x, y, z) {
       let nearestIdx = null, nearestDist = Infinity;
-      const refPos = new THREE.Vector3(x, y, z);
+      findRefPos.set(x, y, z);
       for (let i = 0; i < starMesh.count; i++) {
-        const mat = new THREE.Matrix4();
-        starMesh.getMatrixAt(i, mat);
-        const starPos = new THREE.Vector3().setFromMatrixPosition(mat);
-        const d = refPos.distanceTo(starPos);
+        starMesh.getMatrixAt(i, findMat);
+        findStarPos.setFromMatrixPosition(findMat);
+        const d = findRefPos.distanceTo(findStarPos);
         if (d < nearestDist) { nearestDist = d; nearestIdx = i; }
       }
       return nearestDist < 100 ? nearestIdx : null;
@@ -1539,8 +1849,9 @@
       clearAllConnections();
       const prevLog = console.log;
       console.log = () => {};
-      result.connections.forEach(({ starA, starB }) => addConnection(starA, starB));
-      console.log = prevLog;
+      try {
+        result.connections.forEach(({ starA, starB }) => addConnection(starA, starB));
+      } finally { console.log = prevLog; }
       statusDiv.textContent = `Loaded ${result.connections.length} connections!`;
       if (result.myth) {
         document.getElementById('share-modal').style.display = 'none';
@@ -1556,16 +1867,16 @@
       renderer.setSize(800, 800);
       composer.setSize(800, 800);
       composer.render();
-      const dataURL = renderer.domElement.toDataURL('image/png');
-      renderer.setSize(origSize.x, origSize.y);
-      composer.setSize(origSize.x, origSize.y);
       try {
-        const blob = await new Promise(resolve => renderer.domElement.toBlob(resolve));
+        const blob = await new Promise(resolve => renderer.domElement.toBlob(resolve, 'image/png'));
         await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
         await navigator.clipboard.writeText(currentMyth || 'Constellation Weaver');
         alert('Screenshot + myth copied to clipboard!');
       } catch(e) {
-        window.open(dataURL, '_blank');
+        window.open(renderer.domElement.toDataURL('image/png'), '_blank');
+      } finally {
+        renderer.setSize(origSize.x, origSize.y);
+        composer.setSize(origSize.x, origSize.y);
       }
     }
 
@@ -1625,10 +1936,18 @@
       mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
       raycaster.setFromCamera(mouse, camera);
       const hits = raycaster.intersectObject(starMesh);
+      const label = document.getElementById('star-label');
       if (hits.length > 0) {
         renderer.domElement.style.cursor = 'pointer';
+        const idx = hits[0].instanceId;
+        const bx = basePosArray[idx*3], by = basePosArray[idx*3+1], bz = basePosArray[idx*3+2];
+        label.style.display = 'block';
+        label.style.left = (event.clientX + 14) + 'px';
+        label.style.top = (event.clientY - 8) + 'px';
+        label.textContent = `\u2736 ${bx.toFixed(0)}, ${by.toFixed(0)}, ${bz.toFixed(0)}`;
       } else {
         renderer.domElement.style.cursor = 'default';
+        label.style.display = 'none';
       }
     }
 
@@ -1636,10 +1955,36 @@
     renderer.domElement.addEventListener('contextmenu', onRightClick);
     renderer.domElement.addEventListener('mousemove', onMouseMove);
 
-    // Prevent touch interference
+    // Prevent default only on multi-touch to allow OrbitControls to handle single-touch orbit/pinch-zoom
     renderer.domElement.addEventListener('touchstart', e => {
-      if (e.touches.length === 1) e.preventDefault();
+      if (e.touches.length > 1) e.preventDefault();
     }, { passive: false });
+
+    // ─── Keyboard Shortcuts ─────────────────────────────────────────
+    document.addEventListener('keydown', e => {
+      if (e.target.tagName === 'INPUT') return; // Don't fire when typing in input fields
+      if (e.key === 'Escape' || e.key === 'u') {
+        deselectStar();
+      } else if (e.key === 'Delete' || e.key === 'Backspace') {
+        e.preventDefault();
+        removeLastConnection();
+      } else if (e.key === 'c' || e.key === 'C') {
+        if (!e.ctrlKey && !e.metaKey) clearAllConnections();
+      } else if (e.key === 'r' || e.key === 'R') {
+        easeCameraToDefault = true;
+      } else if (e.key === 'a' || e.key === 'A') {
+        if (!e.ctrlKey && !e.metaKey) weaveParams.autoWeave = !weaveParams.autoWeave;
+      } else if (e.key === '?') {
+        const el = document.getElementById('shortcuts-overlay');
+        if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+      }
+    });
+
+    // Hide star label when mouse leaves the canvas
+    renderer.domElement.addEventListener('mouseleave', () => {
+      const label = document.getElementById('star-label');
+      if (label) label.style.display = 'none';
+    });
 
     // ═══════════════════════════════════════════════════════════════
     // SECTION 13: Animation Loop & Resize
@@ -1660,11 +2005,54 @@
       updateAmbientAudio(delta);
       autoWeaveStep(delta);
 
-      if (selectedStarIndex !== null) positionHighlight(selectedStarIndex);
+      if (selectedStarIndex !== null) {
+        positionHighlight(selectedStarIndex);
+        const pulse = 1.0 + Math.sin(totalTime * 4.0) * 0.12;
+        highlightMesh.scale.setScalar(pulse);
+      }
+
+      // Update connection HUD
+      updateConnectionHUD();
+
+      // Bloom strength auto-scales with connection count
+      const targetBloom = 1.6 + (connections.length / MAX_CONNECTIONS) * 0.5;
+      bloomPass.strength += (targetBloom - bloomPass.strength) * 0.02;
+
+      // Bloom flash decay — driven by animate loop state, not orphaned rAF chains
+      if (bloomFlashState.t < 1) {
+        bloomFlashState.t += 0.05;
+        const ft = bloomFlashState.t;
+        bloomPass.strength = bloomFlashState.baseBloom + 0.8 * (1 - ft * ft);
+      }
+
+      // Camera ease-to-default
+      if (easeCameraToDefault) {
+        if (cameraResetStartTime === 0) cameraResetStartTime = performance.now();
+        const elapsed = performance.now() - cameraResetStartTime;
+        const t = Math.min(elapsed / CAMERA_RESET_DURATION, 1);
+        const eased = 1 - Math.pow(1 - t, 3);
+        camera.position.lerpVectors(camera.position, defaultCameraPos, eased);
+        controls.target.lerpVectors(controls.target, defaultTarget, eased);
+        if (t >= 1) {
+          camera.position.copy(defaultCameraPos);
+          controls.target.copy(defaultTarget);
+          easeCameraToDefault = false;
+          cameraResetStartTime = 0;
+        }
+      }
 
       controls.update();
       composer.render();
     }
+
+    window.addEventListener('webglcontextlost', e => {
+      e.preventDefault();
+      console.warn('WebGL context lost — attempting restore');
+    }, false);
+    window.addEventListener('webglcontextrestored', () => {
+      console.log('WebGL context restored');
+      initializeStars(starMesh.count);
+    }, false);
 
     window.addEventListener('resize', () => {
       camera.aspect = window.innerWidth / window.innerHeight;
@@ -1682,6 +2070,7 @@
     loadAtlas();
     loadDiscoveredConstellations();
     scheduleNextAutoWeave();
+    updateConnectionHUD();
     animate();
 
     console.log('Constellation Weaver initialized');
