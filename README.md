@@ -134,5 +134,3 @@ Full touch support for mobile devices:
 ---
 
 Enjoy the void. Draw stars. Find myths. 
-
-[Rate on Product Hunt](https://www.producthunt.com/posts/constellation-weaver) | [View Source](https://github.com/definitelynotguru/constellation-weaver)
